@@ -8,6 +8,7 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ library for generating ba
 ## Salient Features
 
 * Generates barcodes from ASCII messages (CODE39, CODE128)
+* Decodes CODE39 barcode data to ASCII
 
 ## Requirements
 
@@ -35,7 +36,7 @@ P1/SPIN1:
 ## TODO
 
 - [x] Implement CODE39
-- [ ] Implement CODE39 checksum
+- [x] Implement CODE39 checksum
 - [ ] Implement CODE39 Extended
 - [ ] Implement DataMatrix
 - [ ] Implement QR Codes

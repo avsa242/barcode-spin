@@ -45,7 +45,7 @@ OBJ
     io      : "io"
     epaper  : "display.epaper.il3820.spi"
     fnt     : "font.5x8"
-    code39 : "identification.barcode.code39"
+    code39  : "identification.barcode.code39"
 
 VAR
 
@@ -53,48 +53,59 @@ VAR
     byte _framebuff[BUFF_SZ]
     byte _ser_cog
 
-PUB Main | msg[8], i, msglen, bclen, ptr_bar
+PUB Main | idx, msg[8], bclen, ptr_bar, asclen, ptr_asc, col, row
 
     Setup
-    epaper.BGColor($FF)
+    epaper.BGColor($FF)                                     ' White BG
     epaper.Clear
-    epaper.FGColor(0)
+    epaper.FGColor(0)                                       ' Black FG
     ser.newline
 
-    _y := 16                                                    ' Starting y-coordinate for barcode
-    msglen := 0
+    _y := 16                                                ' Starting y-coordinate for barcode
 
-    msg := string("PROPELLER")                                  ' Message to encode
-    msglen := strsize(msg)
-    ptr_bar := code39.AtoC39(msg, msglen-1)                     ' Generate the barcode, get pointer to the barcode data
-    bclen := ptr_bar >> 24                                      '   and the length (returned in MSB), in number of words
+    code39.ChecksumEnabled(TRUE)
+    msg := string("PROPELLER")                              ' Message to encode (0..9, A-Z, "-", ".", " ")
+    ptr_bar := code39.AtoC39(msg, strsize(msg))             ' Generate the barcode, get pointer to the encoded barcode data
+    bclen := ptr_bar >> 24                                  '   and the length (returned in MSB), in number of words
+    repeat idx from 0 to bclen
+        RenderBarcode(word[ptr_bar][idx])
 
-    repeat i from 0 to bclen
-        RenderBarcode(word[ptr_bar][i])
+    ptr_asc := code39.C39toA(ptr_bar & $7FFF)               ' Decode the barcode data back to ASCII
+    asclen := ptr_asc >> 24
 
-    repeat until epaper.DisplayReady                            ' Wait for the display to be ready
-    epaper.Update                                               ' Send the display buffer to the display
+    ser.str(string("Decode from CODE39 to ASCII: "))
+    ser.str(ptr_asc)
+    ser.newline
+
+    row := (_y / epaper.FontHeight)+1                       ' Display the barcode text centered below
+    col := (epaper.TextCols - asclen) / 2                   '   the barcode
+    epaper.position(col, row)
+    epaper.str(ptr_asc)
+
+    epaper.printf(string("\n\nChecksum enabled: %s"), lookupz(code39.ChecksumEnabled(-2): string("No"), string("Yes")), 0, 0, 0, 0, 0)
+
+    epaper.Update                                           ' Send the display buffer to the display
 
     FlashLED (LED, 100)
 
 PUB RenderBarcode(ch) | bit, margin
 
     margin := 10
-'    epaper.line(XMAX, _y-1, XMAX-20, _y-1, 0)                   ' Symbol left margin indicator
+'    epaper.line(XMAX, _y-1, XMAX-20, _y-1, 0)               ' Symbol left margin indicator
 
     repeat bit from 0 to code39#SYMBOL_LEN-1
         if ch & 1
-            epaper.line(margin, _y, XMAX-MARGIN, _y, 0)         ' Bar
+            epaper.line(margin, _y, XMAX-MARGIN, _y, 0)     ' Bar
             _y++
         else
-            epaper.line(margin, _y, XMAX-MARGIN, _y, 1)         ' Space
+            epaper.line(margin, _y, XMAX-MARGIN, _y, 1)     ' Space
             if bit < code39#SYMBOL_LEN-1
                 _y++
         ch ->= 1
 
-'    epaper.line(XMAX, _y+1, XMAX-20, _y+1, 0)                   ' Symbol right margin indicator
+'    epaper.line(XMAX, _y+1, XMAX-20, _y+1, 0)               ' Symbol right margin indicator
 
-    _y++                                                        ' Advance right one col after symbol
+    _y++                                                    ' Advance right one col after symbol
 
 PUB Setup
 
