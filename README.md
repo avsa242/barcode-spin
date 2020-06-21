@@ -1,7 +1,7 @@
 # barcode-spin
 --------------
 
-This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~ library for generating barcodes
+This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ library for generating barcodes
 
 **IMPORTANT**: This software is meant to be used with the [spin-standard-library](https://github.com/avsa242/spin-standard-library) (P8X32A) ~~or [p2-spin-standard-library](https://github.com/avsa242/p2-spin-standard-library) (P2X8C4M64P)~~. Please install the applicable library first before attempting to use this code, otherwise you will be missing several files required to build the project.
 
