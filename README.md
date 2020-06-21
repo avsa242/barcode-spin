@@ -7,7 +7,7 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ library for generating ba
 
 ## Salient Features
 
-* Generates CODE128 barcodes from ASCII messages
+* Generates barcodes from ASCII messages (CODE39, CODE128)
 
 ## Requirements
 
@@ -30,11 +30,13 @@ P1/SPIN1:
 
 * Very early in development - may malfunction, or outright fail to build
 * There's no validation performed in the generation of barcodes (valid input chars, etc)
-* Working buffer size in library wasn't arrived at empirically - shouldn't be used to infer practical limit of CODE128
+* Working buffer for generating barcodes is a fixed size built into each barcode library
 
 ## TODO
 
-- [ ] Implement CODE39
+- [x] Implement CODE39
+- [ ] Implement CODE39 checksum
+- [ ] Implement CODE39 Extended
 - [ ] Implement DataMatrix
 - [ ] Implement QR Codes
 - [ ] Make more user-friendly
