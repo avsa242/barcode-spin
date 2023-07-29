@@ -7,10 +7,12 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ library for generating ba
 ![CODE39 on E-Paper (w/Checksum)](https://github.com/avsa242/barcode-spin/blob/testing/code39-cksum-prop-epaper.jpg)
 **IMPORTANT**: This software is meant to be used with the [spin-standard-library](https://github.com/avsa242/spin-standard-library) (P8X32A) ~~or [p2-spin-standard-library](https://github.com/avsa242/p2-spin-standard-library) (P2X8C4M64P)~~. Please install the applicable library first before attempting to use this code, otherwise you will be missing several files required to build the project.
 
+
 ## Salient Features
 
-* Generates barcodes from ASCII messages (CODE39, CODE128)
-* Decodes CODE39 barcode data to ASCII
+* CODE39, CODE128: Generates barcodes from ASCII messages
+* CODE39: decode barcode data to ASCII
+
 
 ## Requirements
 
@@ -21,13 +23,16 @@ P1/SPIN1:
 ~~P2/SPIN2:~~
 * ~~p2-spin-standard-library~~
 
+
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81)
-* ~~P2/SPIN2: FastSpin (tested with 4.1.10-beta)~~ _(not implemented yet)_
-* ~~BST~~ (incompatible - no preprocessor)
-* ~~Propeller Tool~~ (incompatible - no preprocessor)
-* ~~PNut~~ (incompatible - no preprocessor)
+| Processor | Language | Compiler               | Backend      | Status                |
+|-----------|----------|------------------------|--------------|-----------------------|
+| P1        | SPIN1    | FlexSpin (6.2.1)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (6.2.1)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (6.2.1)       | NuCode       | Not yet implemented   |
+| P2        | SPIN2    | FlexSpin (6.2.1)       | Native/PASM2 | Not yet implemented   |
+
 
 ## Limitations
 
@@ -35,11 +40,3 @@ P1/SPIN1:
 * There's no validation performed in the generation of barcodes (valid input chars, etc)
 * Working buffer for generating barcodes is a fixed size built into each barcode library
 
-## TODO
-
-- [x] Implement CODE39
-- [x] Implement CODE39 checksum
-- [ ] Implement CODE39 Extended
-- [ ] Implement DataMatrix
-- [ ] Implement QR Codes
-- [ ] Make more user-friendly

@@ -2,9 +2,7 @@
     --------------------------------------------
     Filename: barcode.code39.spin
     Author: Jesse Burt
-    Description: CODE39 Barcode library
-        Encode CODE39 from ASCII messages
-        Decode CODE39 to ASCII messages
+    Description: Object for building CODE39 barcode data from ASCII
     Copyright (c) 2023
     Started Jun 21, 2020
     Updated Jul 27, 2023
@@ -56,7 +54,7 @@ PUB attach_to_driver(ptr_drv)
     _drv := ptr_drv
 
 pub atoc39 = ascii_to_code39
-PUB ascii_to_code39(): bc_len | cksum, curr_sym, idx
+PUB ascii_to_code39(): bc_len | cksum, sym, idx
 ' Encode CODE39 data from ASCII message
 '   Valid values:
 '       ptr_msg: Pointer to message to generate CODE39 from (0..9, A-Z, "-", ".", " ")
@@ -67,18 +65,25 @@ PUB ascii_to_code39(): bc_len | cksum, curr_sym, idx
     cksum := 0
     _barcode[0] := (code39dict[STARTSTOP] >< SYMBOL_LEN)
 
+    { convert each byte of input data to a code39 symbol }
     repeat idx from 0 to _msg_len-1
-        curr_sym := byte[_ptr_msg][idx]
-        if ( char.isalpha(curr_sym) )
-            curr_sym -= 55
-        elseif ( char.isdigit(curr_sym) )
-            curr_sym -= 48
-        cksum += curr_sym
-        _barcode[idx+1] := (code39dict[curr_sym] >< SYMBOL_LEN)
+        sym := byte[_ptr_msg][idx]
+        if ( char.isalpha(sym) )
+            sym -= 55
+        elseif ( char.isdigit(sym) )
+            sym -= 48
+        cksum += sym
 
+        { convert to CODE39; also, reverse the bits so they're in displayable order }
+        _barcode[idx+1] := (code39dict[sym] >< SYMBOL_LEN)
+
+    { checksum: sum of all symbols, modulo 43, if enabled }
     if ( checksum_enabled() )
         _barcode[++idx] := (code39dict[(cksum // 43)] >< SYMBOL_LEN)
+
+    { insert a stop symbol }
     _barcode[++idx] := (code39dict[STARTSTOP] >< SYMBOL_LEN)
+
     _last_bclen := idx
     return @_barcode | (idx << 16)
 
@@ -108,7 +113,7 @@ PUB code39_to_ascii(ptr_bar) | sym, idx, stst
 
     repeat
         sym := (word[ptr_bar][idx] >< SYMBOL_LEN)
-        _ascii[idx] := lookup_sym(curr_sym)     ' Decode to ASCII
+        _ascii[idx] := lookup_symbol(curr_sym)  ' Decode to ASCII
 
         if ( _ascii[idx] == "*" )               ' Found a START/STOP marker
             stst++                              ' Increment start/stop counter
@@ -121,30 +126,14 @@ PUB code39_to_ascii(ptr_bar) | sym, idx, stst
     while (idx < MAX_ASCII_LEN)
     return ( @_ascii | ((idx+1) << 16) )
 
-PUB conv_and_draw() | x, sy, ey, bit, ch, idx, msg
+PUB conv_and_draw(): l
 ' Convert a message to CODE39 and draw the barcode
 '   Returns: length of barcode drawn
-    x := _sx
-    sy := _sy
-    ey := sy+_height
-
     ascii_to_code39()                           ' convert the message in memory
-    repeat idx from 0 to _last_bclen
-        ch := _barcode[idx]
-        repeat bit from 0 to SYMBOL_LEN-1
-            if ( ch & 1 )                       ' read LSB
-                disp[_drv].line(x, sy, x, ey, _bar_color)
-                x++
-            else
-                disp[_drv].line(x, sy, x, ey, _spc_color)
-                x++
-            ch ->= 1                            ' prep next bit
-
-        x++                                     ' next bar
-    return (x-_sx)
+    l := draw()
 
 PUB draw(): l | x, sy, ey, bit, ch, idx, msg
-' Draw the last formed CODE39 barcode
+' Draw the last formed barcode
 '   Returns: length of barcode drawn
     x := _sx
     sy := _sy
@@ -160,11 +149,10 @@ PUB draw(): l | x, sy, ey, bit, ch, idx, msg
                 disp[_drv].line(x, sy, x, ey, _spc_color)
                 x++
             ch ->= 1                            ' prep next bit
-
         x++                                     ' next bar
     return (x-_sx)
 
-PUB lookup_sym(sym) | idx
+PUB lookup_symbol(sym) | idx
 ' Decode barcode data to ASCII, given a CODE39 word/symbol
 '   Returns: ASCII value of decoded symbol, or '?' if invalid
     repeat idx from 0 to 43
