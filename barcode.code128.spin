@@ -125,10 +125,10 @@ pub draw() | x, sy, ey, bit, ch, idx
         ch := _barcode[idx]
         repeat bit from 0 to 10
             if ( ch & 1 )                       ' LSB set? draw bar
-                disp[_drv].line(x, 0, x, 63, 0)
+                disp[_drv].line(x, sy, x, ey, 0)
                 x++
             else                                ' otherwise, draw space
-                disp[_drv].line(x, 0, x, 63, 15)
+                disp[_drv].line(x, sy, x, ey, 15)
                 if ( bit < 10 )
                     x++
             ch ->= 1                            ' prep next bit
