@@ -5,7 +5,7 @@
     Description: Object for building CODE39 barcode data from ASCII
     Copyright (c) 2023
     Started Jun 21, 2020
-    Updated Jul 27, 2023
+    Updated Jul 30, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -37,7 +37,7 @@ VAR
 
     { colors, position, dimensions }
     long _bar_color, _spc_color
-    word _sx, _sy, _width, _height
+    word _sx, _sy, _width, _height, _bottom, _right
     word _ptr_msg
 
     { barcode data }
@@ -190,6 +190,8 @@ pub set_pos_dims(x, y, w, h)
     _sy := y
     _width := w
     _height := h
+    _right := _sx+_width
+    _bottom := _sy+_height
 
 DAT
 ' CODE39 Symbology

@@ -2,11 +2,11 @@
     --------------------------------------------
     Fimsglename: CODE128-EPaper-Demo.spin
     Author: Jesse Burt
-    Description: Demo of the CODE128 Barcode generator,
-        rendered on an IL3820-based E-Paper display
-    Copyright (c) 2020
+    Description: Demo of the CODE128 Barcode generator
+        * render on display (driver chosen at build-time; see below)
+    Copyright (c) 2023
     Started Jun 20, 2020
-    Updated Jul 29, 2023
+    Updated Jul 30, 2023
     See end of file for terms of use.
     --------------------------------------------
 
@@ -31,20 +31,20 @@ OBJ
     cfg:    "boardcfg.flip"
     ser:    "com.serial.terminal.ansi"
     time:   "time"
-    code128:"barcode.code128"
     fnt:    "font.5x8"
+    code128:"barcode.code128"
     disp:   DISP_DRIVER | WIDTH=256, HEIGHT=64, CS=0, SCK=1, MOSI=2, DC=3, RST=-1
     ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
 
 
 DAT
 
-    { the message to encode
+    { the message to encode:
         CODE128 symbology allows for any ASCII value 32..127 (upper/lower-case letters, numbers,
         punctuation) }
     msg    byte "Propeller", 0
 
-PUB main()
+PUB main() | l, text_x, text_y
 
     setup()
 
@@ -61,8 +61,12 @@ PUB main()
     code128.set_pos_dims(10, 10, 0, 43)         ' position the barcode
     code128.set_colors(0, 15)                   ' set barcode bar, space colors
     code128.set_msg(@msg, strsize(@msg))        ' point the barcode object to the message to encode
-    code128.conv_and_draw()                     ' convert and draw it
-    disp.pos_xy(0, 4)
+    l := code128.conv_and_draw()                ' convert and draw it
+
+    { position the message text at about the bottom center of the barcode }
+    text_x := (l / 2) - ((strsize(@msg)/2) * disp.font_width())
+    text_y := code128._bottom - disp.font_height()
+    disp.pos_xy(text_x, text_y)
     disp.str(@msg)
     disp.show()
 

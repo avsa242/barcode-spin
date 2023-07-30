@@ -4,7 +4,7 @@
     Description: Object for building CODE128 barcode data from ASCII
     Copyright (c) 2020
     Started Jun 20, 2020
-    Updated Jul 29, 2023
+    Updated Jul 30, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -47,7 +47,7 @@ VAR
 
     { colors, position, dimensions }
     long _bar_color, _spc_color
-    word _sx, _sy, _width, _height
+    word _sx, _sy, _width, _height, _right, _bottom
     word _ptr_msg
 
     { barcode data }
@@ -125,10 +125,10 @@ pub draw() | x, sy, ey, bit, ch, idx
         ch := _barcode[idx]
         repeat bit from 0 to 10
             if ( ch & 1 )                       ' LSB set? draw bar
-                disp[_drv].line(x, sy, x, ey, 0)
+                disp[_drv].line(x, sy, x, ey, _bar_color)
                 x++
             else                                ' otherwise, draw space
-                disp[_drv].line(x, sy, x, ey, 15)
+                disp[_drv].line(x, sy, x, ey, _spc_color)
                 if ( bit < 10 )
                     x++
             ch ->= 1                            ' prep next bit
@@ -158,6 +158,8 @@ pub set_pos_dims(x, y, w, h)
     _sy := y
     _width := w
     _height := h
+    _right := _sx + _width
+    _bottom := _sy + _height
 
 DAT
 ' CODE128 Symbology
