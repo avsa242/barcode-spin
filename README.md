@@ -18,7 +18,7 @@ This is a P8X32A/Propeller, ~~P2X8C4M64P/Propeller 2~~ library for generating ba
 
 P1/SPIN1:
 * spin-standard-library
-* Initial demo app requires an IL3820-based E-Paper display
+* Demo apps require a display driver
 
 ~~P2/SPIN2:~~
 * ~~p2-spin-standard-library~~
@@ -38,5 +38,4 @@ P1/SPIN1:
 
 * Very early in development - may malfunction, or outright fail to build
 * There's no validation performed in the generation of barcodes (valid input chars, etc)
-* Working buffer for generating barcodes is a fixed size built into each barcode library
 
