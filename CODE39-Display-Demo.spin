@@ -1,40 +1,36 @@
 {
-    --------------------------------------------
-    Fimsglename: CODE39-EPaper-Demo.spin
-    Author: Jesse Burt
-    Description: Demo of the CODE39 Barcode generator
+----------------------------------------------------------------------------------------------------
+    Filename:       CODE39-EPaper-Demo.spin
+    Description:    Demo of the CODE39 Barcode generator
         * render on display (driver chosen at build-time; see below)
-    Copyright (c) 2023
-    Started Jun 21, 2020
-    Updated Jul 30, 2023
-    See end of file for terms of use.
-    --------------------------------------------
-
-    NOTE: The build symbol DISP_DRIVER must be set to a display driver filename
-
-    Example:
-        flexspin -DDISP_DRIVER=\"display.epaper.il3820\" CODE128-Display-Demo.spin
-
+    Author:         Jesse Burt
+    Started:        Oct 6, 2019
+    Updated:        Oct 24, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+' Uncomment one of the below display drivers
+#define DISP_DRIVER "display.epaper.il3820"
+'#define DISP_DRIVER "display.epaper.il3897"
+#pragma exportdef(DISP_DRIVER)
+
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
-' -- User-modifiable constants
-    SER_BAUD    = 115_200
-' --
 
 OBJ
 
-    cfg:    "boardcfg.flip"
-    ser:    "com.serial.terminal.ansi"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
+    disp:   DISP_DRIVER | WIDTH=256, HEIGHT=64, CS=0, SCK=1, MOSI=2, DC=3, RST=-1
+    ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
+
     time:   "time"
     fnt:    "font.5x8"
     code39: "barcode.code39"
-    disp:   DISP_DRIVER | WIDTH=256, HEIGHT=64, CS=0, SCK=1, MOSI=2, DC=3, RST=-1
-    ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
+
 
 DAT
 
@@ -42,6 +38,7 @@ DAT
         CODE39 symbology allows for any ASCII value 48..57, 65..90, 32, 45, 46
         (upper-case letters, numbers, space, '-', '.') }
     msg    byte "PROPELLER", 0
+
 
 PUB main() | l, text_x, text_y
 
@@ -72,9 +69,10 @@ PUB main() | l, text_x, text_y
 
     repeat
 
+
 PUB setup()
 
-    ser.start(SER_BAUD)
+    ser.start()
     time.msleep(30)
     ser.clear()
     ser.strln(@"Serial terminal started")

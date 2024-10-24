@@ -1,13 +1,14 @@
-{                                                                                                           --------------------------------------------
-    Filename: barcode.code128.spin
-    Author: Jesse Burt
-    Description: Object for building CODE128 barcode data from ASCII
-    Copyright (c) 2020
-    Started Jun 20, 2020
-    Updated Jul 30, 2023
-    See end of file for terms of use.
-    --------------------------------------------
+{
+----------------------------------------------------------------------------------------------------
+    Filename:       barcode.code128.spin
+    Description:    Object for building CODE128 barcode data from ASCII
+    Author:         Jesse Burt
+    Started:        Jun 20, 2020
+    Updated:        Oct 24, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 CON
 
     { limits }
@@ -35,10 +36,12 @@ CON
     STOP_REV        = 107
     STOP_PATT       = 108
 
+
 OBJ
 
     { virtual display driver object }
     disp=   DISP_DRIVER
+
 
 VAR
 
@@ -57,11 +60,13 @@ VAR
     byte _msg_len
     byte _last_bclen
 
+
 pub bind = attach_to_driver
 pub attach = attach_to_driver
 pub attach_to_driver(ptr_drv)
 ' Attach to a display driver object
     _drv := ptr_drv
+
 
 PUB atoc128b = ascii_to_code128b
 PUB ascii_to_code128b() | cksum, sym, idx, weight
@@ -104,15 +109,18 @@ PUB ascii_to_code128b() | cksum, sym, idx, weight
     _last_bclen := idx
     return @_barcode | (idx << 24)              ' address of generated CODE128 | word length
 
+
 pub conv_and_draw(): l
 ' Convert a message to CODE128 and draw the barcode
 '   Returns: length of barcode drawn
     ascii_to_code128b()
     l := draw()
 
+
 pub codeset_b_lookup_symbol(ascii_val): offs
 ' Convert an ASCII value to an offset within the code128 dictionary (code set B)
     return (ascii_val - 32)
+
 
 pub draw() | x, sy, ey, bit, ch, idx
 ' Draw the last formed barcode
@@ -135,6 +143,7 @@ pub draw() | x, sy, ey, bit, ch, idx
         x++                                     ' next bar
     return (x-_sx)
 
+
 pub set_colors(bc, sc)
 ' Set barcode colors
 '   bc: bar color
@@ -142,15 +151,18 @@ pub set_colors(bc, sc)
     _bar_color := bc
     _spc_color := sc
 
+
 pub set_msg(ptr_msg, len)
 ' Set message to generate barcode from
     _ptr_msg := ptr_msg
     _msg_len := len
 
+
 pub set_pos(x, y)
 ' Set position of barcode
     _sx := x
     _sy := y
+
 
 pub set_pos_dims(x, y, w, h)
 ' Set position and dimensions of barcode
@@ -160,6 +172,7 @@ pub set_pos_dims(x, y, w, h)
     _height := h
     _right := _sx + _width
     _bottom := _sy + _height
+
 
 DAT
 ' CODE128 Symbology
@@ -273,9 +286,10 @@ DAT
                     word    %11010111000    ' 107 (REVERSE STOP)
                     word    %110001101011   ' 108 (STOP PATTERN)
 
+
 DAT
 {
-Copyright 2023 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

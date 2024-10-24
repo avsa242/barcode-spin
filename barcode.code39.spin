@@ -1,14 +1,14 @@
 {
-    --------------------------------------------
-    Filename: barcode.code39.spin
-    Author: Jesse Burt
-    Description: Object for building CODE39 barcode data from ASCII
-    Copyright (c) 2023
-    Started Jun 21, 2020
-    Updated Jul 30, 2023
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       barcode.code39.spin
+    Description:    Object for building CODE39 barcode data from ASCII
+    Author:         Jesse Burt
+    Started:        Jun 21, 2020
+    Updated:        Oct 24, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 CON
 
     { limits }
@@ -23,12 +23,14 @@ CON
     SHIFT4          = 42
     STARTSTOP       = 43
 
+
 OBJ
 
     { virtual display driver object }
     disp=   DISP_DRIVER
 
     char:    "char.type"
+
 
 VAR
 
@@ -47,11 +49,13 @@ VAR
     byte _msg_len
     byte _last_bclen
 
+
 PUB bind = attach_to_driver
 PUB attach = attach_to_driver
 PUB attach_to_driver(ptr_drv)
 ' Attach to a display driver object
     _drv := ptr_drv
+
 
 pub atoc39 = ascii_to_code39
 PUB ascii_to_code39(): bc_len | cksum, sym, idx
@@ -87,6 +91,7 @@ PUB ascii_to_code39(): bc_len | cksum, sym, idx
     _last_bclen := idx
     return @_barcode | (idx << 16)
 
+
 PUB checksum_enabled(enabled=-2)
 ' Enable checksum byte in generated barcodes
 '   Valid values: TRUE (-1 or 1), FALSE (0)
@@ -98,6 +103,7 @@ PUB checksum_enabled(enabled=-2)
             ifnot ( lookdown(_cksum_enabled: 0, 1) )
                 _cksum_enabled := FALSE
             return _cksum_enabled
+
 
 PUB c39toa = code39_to_ascii
 PUB code39_to_ascii(ptr_bar) | sym, idx, stst
@@ -126,11 +132,13 @@ PUB code39_to_ascii(ptr_bar) | sym, idx, stst
     while (idx < MAX_ASCII_LEN)
     return ( @_ascii | ((idx+1) << 16) )
 
+
 PUB conv_and_draw(): l
 ' Convert a message to CODE39 and draw the barcode
 '   Returns: length of barcode drawn
     ascii_to_code39()                           ' convert the message in memory
     l := draw()
+
 
 PUB draw(): l | x, sy, ey, bit, ch, idx, msg
 ' Draw the last formed barcode
@@ -152,6 +160,7 @@ PUB draw(): l | x, sy, ey, bit, ch, idx, msg
         x++                                     ' next bar
     return (x-_sx)
 
+
 PUB lookup_symbol(sym) | idx
 ' Decode barcode data to ASCII, given a CODE39 word/symbol
 '   Returns: ASCII value of decoded symbol, or '?' if invalid
@@ -167,6 +176,7 @@ PUB lookup_symbol(sym) | idx
 
     return "?"                                  ' Invalid - not found in the table
 
+
 pub set_colors(bc, sc)
 ' Set barcode colors
 '   bc: bar color
@@ -174,15 +184,18 @@ pub set_colors(bc, sc)
     _bar_color := bc
     _spc_color := sc
 
+
 pub set_msg(ptr_msg, len)
 ' Set message to generate barcode from
     _ptr_msg := ptr_msg
     _msg_len := len
 
+
 pub set_pos(x, y)
 ' Set position of barcode
     _sx := x
     _sy := y
+
 
 pub set_pos_dims(x, y, w, h)
 ' Set position and dimensions of barcode
@@ -192,6 +205,7 @@ pub set_pos_dims(x, y, w, h)
     _height := h
     _right := _sx+_width
     _bottom := _sy+_height
+
 
 DAT
 ' CODE39 Symbology
@@ -243,9 +257,10 @@ DAT
                     word    %101001001001   ' % (SHIFT)
                     word    %100101101101   ' * (START / STOP, _not_ asterisk)
 
+
 DAT
 {
-Copyright 2023 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

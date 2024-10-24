@@ -1,40 +1,36 @@
 {
-    --------------------------------------------
-    Fimsglename: CODE128-EPaper-Demo.spin
-    Author: Jesse Burt
-    Description: Demo of the CODE128 Barcode generator
+----------------------------------------------------------------------------------------------------
+    Filename:       CODE128-EPaper-Demo.spin
+    Description:    Demo of the CODE128 Barcode generator
         * render on display (driver chosen at build-time; see below)
-    Copyright (c) 2023
-    Started Jun 20, 2020
-    Updated Jul 30, 2023
-    See end of file for terms of use.
-    --------------------------------------------
-
-    NOTE: The build symbol DISP_DRIVER must be set to a display driver filename
-
-    Example:
-        flexspin -DDISP_DRIVER=\"display.epaper.il3820\" CODE128-Display-Demo.spin
-
+    Author:         Jesse Burt
+    Started:        Jun 20, 2020
+    Updated:        Oct 24, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
+' Uncomment one of the below display drivers
+#define DISP_DRIVER "display.epaper.il3820"
+'#define DISP_DRIVER "display.epaper.il3897"
+#pragma exportdef(DISP_DRIVER)
+
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
-' -- User-modifiable constants
-    SER_BAUD    = 115_200
-' --
 
 OBJ
 
-    cfg:    "boardcfg.flip"
-    ser:    "com.serial.terminal.ansi"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
+    disp:   DISP_DRIVER | WIDTH=256, HEIGHT=64, CS=0, SCK=1, MOSI=2, DC=3, RST=-1, BUSY=5
+    ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
+
     time:   "time"
     fnt:    "font.5x8"
     code128:"barcode.code128"
-    disp:   DISP_DRIVER | WIDTH=256, HEIGHT=64, CS=0, SCK=1, MOSI=2, DC=3, RST=-1
-    ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
 
 
 DAT
@@ -43,6 +39,7 @@ DAT
         CODE128 symbology allows for any ASCII value 32..127 (upper/lower-case letters, numbers,
         punctuation) }
     msg    byte "Propeller", 0
+
 
 PUB main() | l, text_x, text_y
 
@@ -72,9 +69,10 @@ PUB main() | l, text_x, text_y
 
     repeat
 
+
 PUB setup()
 
-    ser.start(SER_BAUD)
+    ser.start()
     time.msleep(30)
     ser.clear()
     ser.strln(@"Serial terminal started")
@@ -87,9 +85,10 @@ PUB setup()
         ser.strln(@"Display driver failed to start - halting")
         repeat
 
+
 DAT
 {
-Copyright 2023 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
