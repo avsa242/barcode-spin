@@ -4,8 +4,8 @@
     Description:    Object for building CODE39 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jun 21, 2020
-    Updated:        Oct 24, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Oct 30, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -26,16 +26,12 @@ CON
 
 OBJ
 
-    { virtual display driver object }
-    disp=   DISP_DRIVER
-
     char:    "char.type"
 
 
 VAR
 
-    { display driver instance }
-    long _drv
+    long line                                   ' display driver line() function pointer
 
     { colors, position, dimensions }
     long _bar_color, _spc_color
@@ -50,11 +46,10 @@ VAR
     byte _last_bclen
 
 
-PUB bind = attach_to_driver
-PUB attach = attach_to_driver
-PUB attach_to_driver(ptr_drv)
-' Attach to a display driver object
-    _drv := ptr_drv
+PUB set_line_func(p_linefunc)
+' Set pointer to line() function
+'   NOTE: The function pointed to must have the signature: line(x1, y1, x2, y2, c)
+    line := p_linefunc
 
 
 pub atoc39 = ascii_to_code39
@@ -151,10 +146,10 @@ PUB draw(): l | x, sy, ey, bit, ch, idx, msg
         ch := _barcode[idx]
         repeat bit from 0 to SYMBOL_LEN-1
             if ( ch & 1 )                       ' LSB set? draw bar
-                disp[_drv].line(x, sy, x, ey, _bar_color)
+                line(x, sy, x, ey, _bar_color)
                 x++
             else                                ' otherwise, draw space
-                disp[_drv].line(x, sy, x, ey, _spc_color)
+                line(x, sy, x, ey, _spc_color)
                 x++
             ch ->= 1                            ' prep next bit
         x++                                     ' next bar
@@ -260,7 +255,7 @@ DAT
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
