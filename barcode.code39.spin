@@ -69,9 +69,9 @@ PUB checksum_enabled(enabled=-2)
 ' Enable checksum byte in generated barcodes
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
-    case ||(enabled)
+    case abs(enabled)
         0, 1:
-            _cksum_enabled := ||(enabled)
+            _cksum_enabled := abs(enabled)
         OTHER:
             ifnot ( lookdown(_cksum_enabled: 0, 1) )
                 _cksum_enabled := FALSE
