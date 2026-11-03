@@ -4,7 +4,7 @@
     Description:    Object for building CODE39 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jun 21, 2020
-    Updated:        Oct 30, 2026
+    Updated:        Nov 3, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -41,50 +41,28 @@ VAR
     { barcode data }
     word _barcode[MAX_BARCODE_LEN]
     byte _ascii[MAX_ASCII_LEN]
+    byte _cksum
     byte _cksum_enabled
     byte _msg_len
-    byte _last_bclen
-
-
-PUB set_line_func(p_linefunc)
-' Set pointer to line() function
-'   NOTE: The function pointed to must have the signature: line(x1, y1, x2, y2, c)
-    line := p_linefunc
+    byte _length
 
 
 pub atoc39 = ascii_to_code39
-PUB ascii_to_code39(): bc_len | cksum, sym, idx
+PUB ascii_to_code39(): bc_len | idx
 ' Encode CODE39 data from ASCII message
-'   Valid values:
-'       ptr_msg: Pointer to message to generate CODE39 from (0..9, A-Z, "-", ".", " ")
-'       len: Length of message
 '   Returns:
 '       LSW [0..15]: Pointer to generated CODE39 data
 '       MSW [16..24]: Word length of generated CODE39 data
-    cksum := 0
-    _barcode[0] := (code39dict[STARTSTOP] >< SYMBOL_LEN)
 
-    { convert each byte of input data to a code39 symbol }
+    start_barcode()
+
+    ' convert each byte of the input data to a code39 symbol
     repeat idx from 0 to _msg_len-1
-        sym := byte[_ptr_msg][idx]
-        if ( char.isalpha(sym) )
-            sym -= 55
-        elseif ( char.isdigit(sym) )
-            sym -= 48
-        cksum += sym
+        putchar(byte[_ptr_msg][idx])
 
-        { convert to CODE39; also, reverse the bits so they're in displayable order }
-        _barcode[idx+1] := (code39dict[sym] >< SYMBOL_LEN)
+    stop_barcode()
 
-    { checksum: sum of all symbols, modulo 43, if enabled }
-    if ( checksum_enabled() )
-        _barcode[++idx] := (code39dict[(cksum // 43)] >< SYMBOL_LEN)
-
-    { insert a stop symbol }
-    _barcode[++idx] := (code39dict[STARTSTOP] >< SYMBOL_LEN)
-
-    _last_bclen := idx
-    return @_barcode | (idx << 16)
+    return @_barcode | (_length << 16)
 
 
 PUB checksum_enabled(enabled=-2)
@@ -98,6 +76,11 @@ PUB checksum_enabled(enabled=-2)
             ifnot ( lookdown(_cksum_enabled: 0, 1) )
                 _cksum_enabled := FALSE
             return _cksum_enabled
+
+
+pub code39_bits(sym): b
+' Get a CODE39 symbol in displayable bit-order
+    return (code39dict[sym] >< SYMBOL_LEN)
 
 
 PUB c39toa = code39_to_ascii
@@ -137,12 +120,12 @@ PUB conv_and_draw(): l
 
 PUB draw(): l | x, sy, ey, bit, ch, idx, msg
 ' Draw the last formed barcode
-'   Returns: length of barcode drawn
+'   Returns: width of barcode formed (pixels)
     x := _sx
     sy := _sy
     ey := sy+_height
 
-    repeat idx from 0 to _last_bclen
+    repeat idx from 0 to _length-1
         ch := _barcode[idx]
         repeat bit from 0 to SYMBOL_LEN-1
             if ( ch & 1 )                       ' LSB set? draw bar
@@ -172,12 +155,34 @@ PUB lookup_symbol(sym) | idx
     return "?"                                  ' Invalid - not found in the table
 
 
+pub putchar(ch)
+' Write a character to the barcode output
+'   ch: character to write
+'   NOTE: This method writes data symbols only, not framing
+    if ( _length < MAX_BARCODE_LEN )
+        case ch                                 ' find character in CODE39 symbology
+            "0".."9":
+                ch -= 48
+            "A".."Z":
+                ch -= 55
+
+        _barcode[_length++] := code39_bits(ch)
+
+        _cksum += ch
+
+
 pub set_colors(bc, sc)
 ' Set barcode colors
 '   bc: bar color
 '   sc: space color
     _bar_color := bc
     _spc_color := sc
+
+
+PUB set_line_func(p_linefunc)
+' Set pointer to line() function
+'   NOTE: The function pointed to must have the signature: line(x1, y1, x2, y2, c)
+    line := p_linefunc
 
 
 pub set_msg(ptr_msg, len)
@@ -200,6 +205,28 @@ pub set_pos_dims(x, y, w, h)
     _height := h
     _right := _sx+_width
     _bottom := _sy+_height
+
+
+pub start_barcode()
+' Start new barcode output
+
+    bytefill(@_barcode, 0, MAX_BARCODE_LEN)     ' clear output buffer
+    _cksum := 0
+    _length := 0
+
+    ' insert a start symbol
+    _barcode[_length++] := code39_bits(STARTSTOP)
+
+
+pub stop_barcode(ck=false)
+' Stop/end barcode output
+
+    ' checksum: sum of all symbols, modulo 43, if enabled
+    if ( checksum_enabled() or (ck <> false) )
+        _barcode[_length++] := code39_bits(_cksum // 43)
+
+    ' insert a stop symbol
+    _barcode[_length++] := code39_bits(STARTSTOP)
 
 
 DAT
