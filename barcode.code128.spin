@@ -4,8 +4,8 @@
     Description:    Object for building CODE128 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jun 20, 2020
-    Updated:        Oct 24, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Nov 6, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -37,16 +37,9 @@ CON
     STOP_PATT       = 108
 
 
-OBJ
-
-    { virtual display driver object }
-    disp=   DISP_DRIVER
-
-
 VAR
 
-    { display driver instance }
-    long _drv
+    long line
 
     { colors, position, dimensions }
     long _bar_color, _spc_color
@@ -59,13 +52,6 @@ VAR
     byte _cksum_enabled
     byte _msg_len
     byte _last_bclen
-
-
-pub bind = attach_to_driver
-pub attach = attach_to_driver
-pub attach_to_driver(ptr_drv)
-' Attach to a display driver object
-    _drv := ptr_drv
 
 
 PUB atoc128b = ascii_to_code128b
@@ -133,10 +119,10 @@ pub draw() | x, sy, ey, bit, ch, idx
         ch := _barcode[idx]
         repeat bit from 0 to 10
             if ( ch & 1 )                       ' LSB set? draw bar
-                disp[_drv].line(x, sy, x, ey, _bar_color)
+                line(x, sy, x, ey, _bar_color)
                 x++
             else                                ' otherwise, draw space
-                disp[_drv].line(x, sy, x, ey, _spc_color)
+                line(x, sy, x, ey, _spc_color)
                 if ( bit < 10 )
                     x++
             ch ->= 1                            ' prep next bit
@@ -150,6 +136,12 @@ pub set_colors(bc, sc)
 '   sc: space color
     _bar_color := bc
     _spc_color := sc
+
+
+pub set_line_func(p_linefunc)
+' Set pointer to line() function
+'   NOTE: The function pointed to must have the signature: line(x1, y1, x2, y2, c)
+    line := p_linefunc
 
 
 pub set_msg(ptr_msg, len)
@@ -289,7 +281,7 @@ DAT
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
