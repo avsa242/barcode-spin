@@ -70,7 +70,7 @@ PUB ascii_to_code128b() | cksum, sym, idx, weight
     cksum += sym * weight                       ' checksum
 
     { code set B start symbol; also, reverse the bits so they're in displayable order }
-    _barcode[0] := code128dict[START_B] >< SYMBOL_LEN
+    _barcode[0] := code128_bits(START_B)
 
     { convert each byte of input data to a code128 (code set B) symbol }
     repeat idx from 0 to _msg_len-1
@@ -80,20 +80,25 @@ PUB ascii_to_code128b() | cksum, sym, idx, weight
         elseif ( (idx => 1) and (idx =< _msg_len) )
             weight++
         cksum += sym * weight
-        _barcode[idx+1] := code128dict[sym] >< SYMBOL_LEN
+        _barcode[idx+1] := code128_bits(sym)
 
     { checksum: sum all symbols * weights, modulo 103
         NOTE: The checksum is _mandatory_ with code128 }
-    _barcode[++idx] := code128dict[(cksum // 103)] >< SYMBOL_LEN
+    _barcode[++idx] := code128_bits(cksum // 103)
 
     { stop symbol }
-    _barcode[++idx] := code128dict[STOP] >< SYMBOL_LEN
+    _barcode[++idx] := code128_bits(STOP)
 
     { 2-module bar: _always_ at the end, regardless of a left-to-right or right-to-left barcode }
     _barcode[++idx] := %11
 
     _last_bclen := idx
     return @_barcode | (idx << 24)              ' address of generated CODE128 | word length
+
+
+pub code128_bits(sym): b
+' Get a CODE128 symbol in displayable bit-order
+    return code128dict[sym] >< SYMBOL_LEN
 
 
 pub conv_and_draw(): l

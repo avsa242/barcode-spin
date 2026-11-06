@@ -11,8 +11,8 @@
 }
 
 ' Uncomment one of the below display drivers
-#define DISP_DRIVER "display.epaper.il3820"
-'#define DISP_DRIVER "display.epaper.il3897"
+'#define DISP_DRIVER "display.epaper.il3820"
+#define DISP_DRIVER "display.epaper.il3897"
 #pragma exportdef(DISP_DRIVER)
 
 
@@ -46,23 +46,25 @@ PUB main() | l, text_x, text_y
     setup()
 
     disp.defaults()
+    disp.preset_2p13_bw()
+    disp.set_rotation(90)
 
     { NOTE: it's recommended to keep the colors set as (or change to, if necessary)
         black foreground on white background } 
-    disp.bgcolor(disp.MAX_COLOR)                ' typically white
+    disp.bgcolor(255)                           ' typically white
     disp.fgcolor(0)                             ' typically black
 
     disp.clear()
 
-    code128.attach(@disp)                       ' bind to the display driver chosen above
+    code128.set_line_func(@disp.line)           ' set display driver's line() function
     code128.set_pos_dims(10, 10, 0, 43)         ' position the barcode
-    code128.set_colors(0, 15)                   ' set barcode bar, space colors
+    code128.set_colors(0, 1)                    ' set barcode bar, space colors
     code128.set_msg(@msg, strsize(@msg))        ' point the barcode object to the message to encode
     l := code128.conv_and_draw()                ' convert and draw it
 
     { position the message text at about the bottom center of the barcode }
-    text_x := (l / 2) - ((strsize(@msg)/2) * disp.font_width())
-    text_y := code128._bottom - disp.font_height()
+    text_x := ( (l / 2) - ((strsize(@msg)/2) * disp.font_width()) ) / 5
+    text_y := (code128._bottom + disp.font_height() ) / 8
     disp.pos_xy(text_x, text_y)
     disp.str(@msg)
     disp.show()
