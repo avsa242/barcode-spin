@@ -4,10 +4,11 @@
     Description:    Object for building CODE39 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jun 21, 2020
-    Updated:        Nov 4, 2026
+    Updated:        Nov 6, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+#include "terminal.common.spinh"
 
 CON
 
@@ -168,10 +169,68 @@ pub putchar(ch)
 '   NOTE: This method writes data symbols only, not framing
     if ( _length < MAX_BARCODE_LEN )
         case ch                                 ' find character in CODE39 symbology
+            NUL:
+                putchar("%")
+                putchar("U")
+                return
+            SOH..ACK, BEL, BS, HT, LF, VT, FF, CR, SO..SUB_:
+                putchar("$")
+                putchar(ch+$40)
+                return
+            ESC..31:                             ' ESC, FS, GS, RS, US
+                putchar("%")
+                putchar(ch+$26)
+                return
             "0".."9":
                 ch -= 48
             "A".."Z":
                 ch -= 55
+            "-":
+                ch := 36
+            ".":
+                ch := 37
+            " ":
+                ch := 38
+            "$":
+                ch := 39
+            "/":
+                ch := 40
+            "+":
+                ch := 41
+            "%":
+                ch := 42
+            "a".."z":
+                putchar("+")
+                putchar(ch-$20)
+                return
+            "!", 34{"}, "#", "&", "'", "(", ")", "*", ",", ":":
+                putchar("/")
+                putchar(ch+$20)
+                return
+            "<", "=", ">", "?":
+                putchar("%")
+                putchar(ch+$0b)
+                return
+            "@":
+                putchar("%")
+                putchar(ch+$16)
+                return
+            "[", "\", "]", "^", "_":
+                putchar("%")
+                putchar(ch-$10)
+                return
+            "`":
+                putchar("%")
+                putchar(ch-$09)
+                return
+            "{", "|", "}", "~":
+                putchar("%")
+                putchar(ch-$2b)
+                return
+            DEL:
+                putchar("%")
+                putchar("T")
+                return
 
         _barcode[_length++] := code39_bits(ch)
 

@@ -4,10 +4,11 @@
     Description:    Object for building CODE39 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jul 30, 2023
-    Updated:        Nov 4, 2026
+    Updated:        Nov 6, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+#include "terminal.common.spin2h"
 
 CON
 
@@ -26,16 +27,12 @@ CON
 
 OBJ
 
-    { virtual display driver object }
-    disp=   DISP_DRIVER
-
     char:    "char.type"
 
 
 VAR
 
-    { display driver instance }
-    long _drv
+    long line                                   ' display driver line() function pointer
 
     { colors, position, dimensions }
     long _bar_color, _spc_color
@@ -49,13 +46,6 @@ VAR
     byte _cksum_enabled
     byte _msg_len
     byte _length
-
-
-PUB bind = attach_to_driver
-PUB attach = attach_to_driver
-PUB attach_to_driver(ptr_drv)
-' Attach to a display driver object
-    _drv := ptr_drv
 
 
 pub atoc39 = ascii_to_code39
@@ -98,7 +88,7 @@ PUB checksum_enabled(enabled=-2)
 
 pub code39_bits(sym): b
 ' Get a CODE39 symbol in displayable bit-order
-    return (code39dict[sym] rev (SYMBOL_LEN-1)
+    return (code39dict[sym] rev (SYMBOL_LEN-1) )
 
 
 PUB c39toa = code39_to_ascii
@@ -147,10 +137,10 @@ PUB draw(): l | x, sy, ey, bit, ch, idx, msg
         ch := _barcode[idx]
         repeat bit from 0 to SYMBOL_LEN-1
             if ( ch & 1 )                       ' LSB set? draw bar
-                disp[_drv].line(x, sy, x, ey, _bar_color)
+                line(x, sy, x, ey, _bar_color)
                 x++
             else                                ' otherwise, draw space
-                disp[_drv].line(x, sy, x, ey, _spc_color)
+                line(x, sy, x, ey, _spc_color)
                 x++
             ch ror= 1                           ' prep next bit
         x++                                     ' next bar
@@ -179,10 +169,68 @@ pub putchar(ch)
 '   NOTE: This method writes data symbols only, not framing
     if ( _length < MAX_BARCODE_LEN )
         case ch                                 ' find character in CODE39 symbology
+            NUL:
+                putchar("%")
+                putchar("U")
+                return
+            SOH..ACK, BEL, BS, HT, LF, VT, FF, CR, SO..SUB_:
+                putchar("$")
+                putchar(ch+$40)
+                return
+            ESC..31:                             ' ESC, FS, GS, RS, US
+                putchar("%")
+                putchar(ch+$26)
+                return
             "0".."9":
                 ch -= 48
             "A".."Z":
                 ch -= 55
+            "-":
+                ch := 36
+            ".":
+                ch := 37
+            " ":
+                ch := 38
+            "$":
+                ch := 39
+            "/":
+                ch := 40
+            "+":
+                ch := 41
+            "%":
+                ch := 42
+            "a".."z":
+                putchar("+")
+                putchar(ch-$20)
+                return
+            "!", 34{"}, "#", "&", "'", "(", ")", "*", ",", ":":
+                putchar("/")
+                putchar(ch+$20)
+                return
+            "<", "=", ">", "?":
+                putchar("%")
+                putchar(ch+$0b)
+                return
+            "@":
+                putchar("%")
+                putchar(ch+$16)
+                return
+            "[", "\", "]", "^", "_":
+                putchar("%")
+                putchar(ch-$10)
+                return
+            "`":
+                putchar("%")
+                putchar(ch-$09)
+                return
+            "{", "|", "}", "~":
+                putchar("%")
+                putchar(ch-$2b)
+                return
+            DEL:
+                putchar("%")
+                putchar("T")
+                return
 
         _barcode[_length++] := code39_bits(ch)
 
@@ -195,6 +243,12 @@ pub set_colors(bc, sc)
 '   sc: space color
     _bar_color := bc
     _spc_color := sc
+
+
+PUB set_line_func(p_linefunc)
+' Set pointer to line() function
+'   NOTE: The function pointed to must have the signature: line(x1, y1, x2, y2, c)
+    line := p_linefunc
 
 
 pub set_msg(ptr_msg, len)

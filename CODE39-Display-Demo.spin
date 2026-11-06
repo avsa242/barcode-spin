@@ -5,7 +5,7 @@
         * render on display (driver chosen at build-time; see below)
     Author:         Jesse Burt
     Started:        Oct 6, 2019
-    Updated:        Oct 30, 2026
+    Updated:        Nov 6, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -19,8 +19,8 @@ CON
 OBJ
 
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
-    disp:   "display.epaper.il3897" | WIDTH=122, HEIGHT=250, CS=8, SCK=9, MOSI=10, DC=11, RST=12, BUSY=13
-'    disp:   "display.epaper.il3820" | WIDTH=128, HEIGHT=296, CS=8, SCK=9, MOSI=10, DC=11, RST=12, BUSY=13
+    disp:   "display.epaper.il3897" | WIDTH=122, HEIGHT=250, CS=0, SCK=1, MOSI=2, DC=3, RST=4, BUSY=5
+'    disp:   "display.epaper.il3820" | WIDTH=128, HEIGHT=296, CS=0, SCK=1, MOSI=2, DC=3, RST=4, BUSY=5
 
     ' NOTE: E-paper displays (e.g. IL3820, IL3897 also use a BUSY pin)
 
@@ -31,10 +31,15 @@ OBJ
 
 DAT
 
-    { the message to encode:
-        CODE39 symbology allows for any ASCII value 48..57, 65..90, 32, 45, 46
-        (upper-case letters, numbers, space, '-', '.') }
+    ' the message to encode:
     msg    byte "PROPELLER", 0
+
+    ' CODE39 symbology allows for any ASCII value 48..57, 65..90, 32, 45, 46
+    '   (upper-case letters, numbers, space, '-', '.') }
+    ' The barcode will be encoded as CODE39 Extended if the string contains any of the following:
+    '   * lower-case letters
+    '   * symbols !"#&'()*,:<=>?@[\]^_`{|}~
+    '   * non-printable control codes (ASCII 31 and lower, and 127)
 
 
 PUB main() | l, text_x, text_y
@@ -43,9 +48,9 @@ PUB main() | l, text_x, text_y
 
 '    disp.defaults()
 
-'    disp.preset_2p13_bw()                      ' il3897
+'    disp.preset_2p13_bw()                       ' il3897
 
-    disp.set_rotation(90)
+'    disp.set_rotation(0)                        ' 0, 90, 180, 270
 
     ' set screen background, text and barcode colors
     ' NOTE: it's recommended to use the display driver's black color on a white background
@@ -56,12 +61,13 @@ PUB main() | l, text_x, text_y
     disp.clear()
 
     code39.set_line_func(@disp.line)            ' attach barcode obj to display's line() function
+
     code39.checksum_enabled(false)              ' optional CODE39 checksum
 
     ' position the barcode: x, y, width, height
     ' NOTE: Set the x position away from the extreme edge of the screen so the beginning of the
     '   barcode can be seen by the reader
-    code39.set_pos_dims(10, 10, 0, 40)
+    code39.set_pos_dims(5, 10, 0, 40)
 
     code39.set_msg(@msg, strsize(@msg))         ' point the barcode object to the message to encode
     l := code39.conv_and_draw()                 ' convert and draw it
