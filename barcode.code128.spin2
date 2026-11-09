@@ -66,16 +66,8 @@ PUB ascii_to_code128b() | sym, src
 '   Returns:
 '       LSW [0..15]: Pointer to generated CODE128 data
 '       MSB [24..31]: Word length of generated CODE128 data
-    _cksum := 0
 
-    _weight := 1                                 ' init multiplier for checksum calc
-    sym := START_B
-    _cksum += sym * _weight                       ' checksum
-
-    _length := 0
-
-    ' code set B start symbol; also, reverse the bits so they're in displayable order
-    _barcode[_length++] := code128_bits(START_B)
+    start_barcode()
 
     ' convert each byte of input data to a code128 (code set B) symbol
     repeat src from 0 to _msg_len-1
@@ -85,11 +77,7 @@ PUB ascii_to_code128b() | sym, src
     '    NOTE: The checksum is _mandatory_ with code128
     _barcode[_length++] := code128_bits(_cksum // 103)
 
-    ' stop symbol
-    _barcode[_length++] := code128_bits(STOP)
-
-    ' 2-module bar: _always_ at the end, regardless of a left-to-right or right-to-left barcode
-    _barcode[_length++] := %11
+    stop_barcode()
 
     _last_bclen := _length
     return @_barcode | (_length << 24)          ' address of generated CODE128 | word length
@@ -179,6 +167,31 @@ pub set_pos_dims(x, y, w, h)
     _height := h
     _right := _sx + _width
     _bottom := _sy + _height
+
+
+pub start_barcode()
+' Start new barcode output
+
+    bytefill(@_barcode, 0, MAX_BARCODE_LEN)     ' clear output buffer
+    _cksum := 0
+
+    _weight := 1                                 ' init multiplier for checksum calc
+    _cksum += START_B * _weight                       ' checksum
+
+    _length := 0
+
+    ' code set B start symbol; also, reverse the bits so they're in displayable order
+    _barcode[_length++] := code128_bits(START_B)
+
+
+pub stop_barcode()
+' Stop/end barcode output
+
+     ' stop symbol
+    _barcode[_length++] := code128_bits(STOP)
+
+    ' 2-module bar: _always_ at the end, regardless of a left-to-right or right-to-left barcode
+    _barcode[_length++] := %11
 
 
 DAT
