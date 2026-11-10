@@ -4,7 +4,7 @@
     Description:    Object for building CODE128 barcode data from ASCII
     Author:         Jesse Burt
     Started:        Jun 20, 2020
-    Updated:        Nov 6, 2026
+    Updated:        Nov 10, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -49,13 +49,16 @@ VAR
     { barcode data }
     word _barcode[MAX_BARCODE_LEN]
     byte _ascii[MAX_ASCII_LEN]
+    long _cksum
     byte _cksum_enabled
+    long _weight
     byte _msg_len
     byte _last_bclen
+    byte _length
 
 
-PUB atoc128b = ascii_to_code128b
-PUB ascii_to_code128b() | cksum, sym, idx, weight
+pub atoc128b = ascii_to_code128b
+pub ascii_to_code128b() | sym, src
 ' Encode CODE128 (Code set B) data from ASCII message
 '   Valid values:
 '       ptr_msg: Pointer to message to generate CODE128 from (ASCII 32..127)
@@ -63,37 +66,21 @@ PUB ascii_to_code128b() | cksum, sym, idx, weight
 '   Returns:
 '       LSW [0..15]: Pointer to generated CODE128 data
 '       MSB [24..31]: Word length of generated CODE128 data
-    cksum := 0
 
-    weight := 1                                 ' init multiplier for checksum calc
-    sym := START_B
-    cksum += sym * weight                       ' checksum
+    start_barcode()
 
-    { code set B start symbol; also, reverse the bits so they're in displayable order }
-    _barcode[0] := code128_bits(START_B)
+    ' convert each byte of input data to a code128 (code set B) symbol
+    repeat src from 0 to _msg_len-1
+        putchar(byte[_ptr_msg][src])
 
-    { convert each byte of input data to a code128 (code set B) symbol }
-    repeat idx from 0 to _msg_len-1
-        sym := codeset_b_lookup_symbol(byte[_ptr_msg][idx])
-        if ( idx == 0 )
-            weight := 1
-        elseif ( (idx => 1) and (idx =< _msg_len) )
-            weight++
-        cksum += sym * weight
-        _barcode[idx+1] := code128_bits(sym)
+    ' checksum: sum all symbols * weights, modulo 103
+    '    NOTE: The checksum is _mandatory_ with code128
+    _barcode[_length++] := code128_bits(_cksum // 103)
 
-    { checksum: sum all symbols * weights, modulo 103
-        NOTE: The checksum is _mandatory_ with code128 }
-    _barcode[++idx] := code128_bits(cksum // 103)
+    stop_barcode()
 
-    { stop symbol }
-    _barcode[++idx] := code128_bits(STOP)
-
-    { 2-module bar: _always_ at the end, regardless of a left-to-right or right-to-left barcode }
-    _barcode[++idx] := %11
-
-    _last_bclen := idx
-    return @_barcode | (idx << 24)              ' address of generated CODE128 | word length
+    _last_bclen := _length
+    return @_barcode | (_length << 24)          ' address of generated CODE128 | word length
 
 
 pub code128_bits(sym): b
@@ -135,6 +122,17 @@ pub draw() | x, sy, ey, bit, ch, idx
     return (x-_sx)
 
 
+pub putchar(ch) | sym
+' Write a character to the barcode output
+'   ch: character to write
+'   NOTE: This method writes data symbols only, not framing
+    sym := codeset_b_lookup_symbol(ch)
+    _weight := _length
+    _cksum += sym * _weight
+
+    _barcode[_length++] := code128_bits(sym)
+
+
 pub set_colors(bc, sc)
 ' Set barcode colors
 '   bc: bar color
@@ -169,6 +167,31 @@ pub set_pos_dims(x, y, w, h)
     _height := h
     _right := _sx + _width
     _bottom := _sy + _height
+
+
+pub start_barcode()
+' Start new barcode output
+
+    bytefill(@_barcode, 0, MAX_BARCODE_LEN)     ' clear output buffer
+    _cksum := 0
+
+    _weight := 1                                 ' init multiplier for checksum calc
+    _cksum += START_B * _weight                       ' checksum
+
+    _length := 0
+
+    ' code set B start symbol; also, reverse the bits so they're in displayable order
+    _barcode[_length++] := code128_bits(START_B)
+
+
+pub stop_barcode()
+' Stop/end barcode output
+
+    ' stop symbol
+    _barcode[_length++] := code128_bits(STOP)
+
+    ' 2-module bar: _always_ at the end, regardless of a left-to-right or right-to-left barcode
+    _barcode[_length++] := %11
 
 
 DAT
