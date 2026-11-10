@@ -59,14 +59,16 @@ VAR
 
 
 pub atoc128b = ascii_to_code128b
-pub ascii_to_code128b() | sym, src
+pub ascii_to_code128b(p_msg=0) | sym, src
 ' Encode CODE128 (Code set B) data from ASCII message
-'   Valid values:
-'       ptr_msg: Pointer to message to generate CODE128 from (ASCII 32..127)
-'       len: Length of message
+'   p_msg:      string/message to encode (optional; default is to encode the message previously
+'               pointed to by set_msg()
 '   Returns:
 '       LSW [0..15]: Pointer to generated CODE128 data
 '       MSB [24..31]: Word length of generated CODE128 data
+
+    ifnot ( p_msg )
+        p_msg := _ptr_msg
 
     start_barcode()
 
