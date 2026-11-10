@@ -8,6 +8,7 @@
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+#include "terminal.common.spinh"
 
 CON
 
